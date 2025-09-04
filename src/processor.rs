@@ -152,6 +152,7 @@ pub struct ReplayProcessor<'a> {
     pub player_to_actor_id: HashMap<PlayerId, boxcars::ActorId>,
     pub player_to_car: HashMap<boxcars::ActorId, boxcars::ActorId>,
     pub player_to_team: HashMap<boxcars::ActorId, boxcars::ActorId>,
+    pub car_to_player: HashMap<boxcars::ActorId, boxcars::ActorId>,
     pub car_to_boost: HashMap<boxcars::ActorId, boxcars::ActorId>,
     pub car_to_jump: HashMap<boxcars::ActorId, boxcars::ActorId>,
     pub car_to_double_jump: HashMap<boxcars::ActorId, boxcars::ActorId>,
@@ -193,6 +194,7 @@ impl<'a> ReplayProcessor<'a> {
             player_to_car: HashMap::new(),
             player_to_team: HashMap::new(),
             player_to_actor_id: HashMap::new(),
+            car_to_player: HashMap::new(),
             car_to_boost: HashMap::new(),
             car_to_jump: HashMap::new(),
             car_to_double_jump: HashMap::new(),
@@ -281,6 +283,7 @@ impl<'a> ReplayProcessor<'a> {
         self.player_to_car = HashMap::new();
         self.player_to_team = HashMap::new();
         self.player_to_actor_id = HashMap::new();
+        self.car_to_player = HashMap::new();
         self.car_to_boost = HashMap::new();
         self.car_to_jump = HashMap::new();
         self.car_to_double_jump = HashMap::new();
@@ -536,6 +539,7 @@ impl<'a> ReplayProcessor<'a> {
     /// - `player_to_actor_id`: maps a player's [`boxcars::UniqueId`] to their actor ID.
     /// - `player_to_team`: maps a player's actor ID to their team actor ID.
     /// - `player_to_car`: maps a player's actor ID to their car actor ID.
+    /// - `car_to_player`: maps a cars's actor ID to the associated player. (car actor isn't guarunteed to still exist)
     /// - `car_to_boost`: maps a car's actor ID to its associated boost actor ID.
     /// - `car_to_dodge`: maps a car's actor ID to its associated dodge actor ID.
     /// - `car_to_jump`: maps a car's actor ID to its associated jump actor ID.
@@ -611,6 +615,13 @@ impl<'a> ReplayProcessor<'a> {
             maintain_vehicle_key_link!(self.car_to_dodge, DODGE_TYPE);
             maintain_vehicle_key_link!(self.car_to_jump, JUMP_TYPE);
             maintain_vehicle_key_link!(self.car_to_double_jump, DOUBLE_JUMP_TYPE);
+        }
+
+        // sometimes a car is destroyed, which removes it from the "player_to_car" map, but we still might want to know who owned that car
+        for p_to_c in self.player_to_car.iter() {
+            if *p_to_c.0 != boxcars::ActorId(-1) {
+                self.car_to_player.insert(*p_to_c.1, *p_to_c.0);
+            }
         }
 
         for actor_id in frame.deleted_actors.iter() {
@@ -839,10 +850,8 @@ impl<'a> ReplayProcessor<'a> {
         &self,
         actor_id: &boxcars::ActorId,
     ) -> SubtrActorResult<boxcars::ActorId> {
-        for (player_id, car_id) in self.player_to_car.iter() {
-            if actor_id == car_id {
-                return Ok(*player_id);
-            }
+        if let Some(car_id) = self.car_to_player.get(&actor_id) {
+            return Ok(car_id.clone());
         }
         SubtrActorError::new_result(SubtrActorErrorVariant::NoMatchingPlayerId {
             actor_id: *actor_id,
@@ -1409,6 +1418,7 @@ impl<'a> ReplayProcessor<'a> {
         let pairs = [
             ("player_to_car", &self.player_to_car),
             ("player_to_team", &self.player_to_team),
+            ("car_to_player", &self.car_to_player),
             ("car_to_boost", &self.car_to_boost),
             ("car_to_jump", &self.car_to_jump),
             ("car_to_double_jump", &self.car_to_double_jump),
