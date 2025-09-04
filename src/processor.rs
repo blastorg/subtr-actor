@@ -821,6 +821,8 @@ impl<'a> ReplayProcessor<'a> {
         let attacker = self.get_player_id_from_car_id(&demo.attacker.actor)?;
         let victim = self.get_player_id_from_car_id(&demo.victim.actor)?;
 
+        let (current_rigid_body, _) = self.get_player_rigid_body_and_updated(&victim)?;
+
         Ok(DemolishInfo {
             time: frame.time,
             seconds_remaining: self.get_seconds_remaining()?,
@@ -829,6 +831,7 @@ impl<'a> ReplayProcessor<'a> {
             victim,
             attacker_velocity: demo.attacker_velocity,
             victim_velocity: demo.victim_velocity,
+            victim_location: current_rigid_body.location,
         })
     }
 

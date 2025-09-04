@@ -32,6 +32,7 @@ pub struct DemolishInfo {
     pub attacker_velocity: boxcars::Vector3f,
     /// The velocity of the victim at the time of demolition.
     pub victim_velocity: boxcars::Vector3f,
+    pub victim_location: boxcars::Vector3f,
 }
 
 /// [`ReplayMeta`] struct represents metadata about the replay being processed.
