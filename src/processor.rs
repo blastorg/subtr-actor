@@ -1447,19 +1447,22 @@ impl<'a> ReplayProcessor<'a> {
             ("car_to_double_jump", &self.car_to_double_jump),
             ("car_to_dodge", &self.car_to_dodge),
         ];
-        let strings: Vec<_> = pairs
+        let mut strings: Vec<_> = pairs
             .iter()
             .map(|(map_name, map)| format!("{map_name:?}: {map:?}"))
             .collect();
+
+        strings.push(format!("name_to_object_id: {:?}", &self.name_to_object_id));
+
         strings.join("\n")
     }
 
     pub fn actor_state_string(&self, actor_id: &boxcars::ActorId) -> String {
-        format!(
-            "{:?}",
-            self.get_actor_state(actor_id)
-                .map(|s| self.map_attribute_keys(&s.attributes))
-        )
+        if let Ok(actor_state) = self.get_actor_state(actor_id) {
+            format!("{:?}", self.map_attribute_keys(&actor_state.attributes))
+        } else {
+            String::from("error")
+        }
     }
 
     pub fn print_actors_by_id<'b>(&self, actor_ids: impl Iterator<Item = &'b boxcars::ActorId>) {
