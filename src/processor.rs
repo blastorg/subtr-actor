@@ -160,7 +160,7 @@ pub struct ReplayProcessor<'a> {
     pub car_to_double_jump: HashMap<boxcars::ActorId, boxcars::ActorId>,
     pub car_to_dodge: HashMap<boxcars::ActorId, boxcars::ActorId>,
     pub demolishes: Vec<DemolishInfo>,
-    known_demolishes: Vec<(boxcars::DemolishFx, usize)>,
+    known_demolishes: Vec<(boxcars::DemolishExtended, usize)>,
 }
 
 impl<'a> ReplayProcessor<'a> {
