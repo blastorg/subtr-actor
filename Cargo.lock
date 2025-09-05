@@ -16,15 +16,15 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "bitter"
-version = "0.7.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f777c49153c6244286ce2e3ba0352295c4cbfe4b3368bedf7ec8ffe9dc5920d7"
+checksum = "b66902ef37c92662310c6a02df613caf898133c12b7d121ef3c2f1d19eebabb5"
 
 [[package]]
 name = "boxcars"
-version = "0.10.4"
+version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95e5cf19f9a0b6c9618c9dc7fb9ce1ef15012dbea2b6a27042d9745ea533a09b"
+checksum = "d13cb11228f595d48ffc3d9e4961b41b9989920bdf80612f12ab33dc3d05d441"
 dependencies = [
  "bitter",
  "encoding_rs",
@@ -490,6 +490,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
+ "web-sys",
 ]
 
 [[package]]
