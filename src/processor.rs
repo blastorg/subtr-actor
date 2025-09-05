@@ -874,16 +874,13 @@ impl<'a> ReplayProcessor<'a> {
         self.known_demolishes
             .iter()
             .any(|(existing, existing_frame_index)| {
-    fn demolish_is_known(&self, demolish_fx: &boxcars::DemolishFx, frame_index: usize) -> bool {
-        self.known_demolishes.iter().any(|(existing, index)| {
-            existing == demolish_fx
                 existing == demo
-                && frame_index
+                    && frame_index
                         .checked_sub(*existing_frame_index)
                         .or_else(|| existing_frame_index.checked_sub(frame_index))
-                    .unwrap()
-                    < MAX_DEMOLISH_KNOWN_FRAMES_PASSED
-        })
+                        .unwrap()
+                        < MAX_DEMOLISH_KNOWN_FRAMES_PASSED
+            })
     }
 
     /// Provides an iterator over the active demolition effects,
