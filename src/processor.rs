@@ -804,7 +804,19 @@ impl<'a> ReplayProcessor<'a> {
             match self.build_demolish_info(&demolish, frame, frame_index) {
                 Ok(demolish_info) => self.demolishes.push(demolish_info),
                 Err(_e) => {
-                    log::warn!("Error building demolish info");
+                    log::warn!("Error building demolish info:");
+                    log::warn!("{}", _e.variant.to_string());
+                    log::warn!(
+                        "attacker_car: {}, victim_car: {}, attacker: {}, victim: {}",
+                        demolish.attacker.actor,
+                        demolish.victim.actor,
+                        self.car_to_player
+                            .get(&demolish.attacker.actor)
+                            .unwrap_or(&boxcars::ActorId { 0: -1 }),
+                        self.car_to_player
+                            .get(&demolish.victim.actor)
+                            .unwrap_or(&boxcars::ActorId { 0: -1 })
+                    );
                 }
             }
         }
@@ -874,6 +886,12 @@ impl<'a> ReplayProcessor<'a> {
         self.known_demolishes
             .iter()
             .any(|(existing, existing_frame_index)| {
+                // log::debug!(
+                //     "existing demolish: victim: {:?}, attacker: {:?} at frame {}",
+                //     existing.victim.actor,
+                //     existing.attacker.actor,
+                //     existing_frame_index
+                // );
                 existing == demo
                     && frame_index
                         .checked_sub(*existing_frame_index)
@@ -1477,7 +1495,7 @@ impl<'a> ReplayProcessor<'a> {
         self.iter_actors_by_type(actor_type)
             .unwrap()
             .for_each(|(_actor_id, state)| {
-                println!("{:?}", self.map_attribute_keys(&state.attributes));
+                log::debug!("{:?}", self.map_attribute_keys(&state.attributes));
             });
     }
 
@@ -1488,7 +1506,7 @@ impl<'a> ReplayProcessor<'a> {
             .keys()
             .filter_map(|id| self.object_id_to_name.get(id))
             .collect();
-        println!("{types:?}");
+        log::debug!("{types:?}");
     }
 
     pub fn print_all_actors(&self) {
@@ -1496,7 +1514,13 @@ impl<'a> ReplayProcessor<'a> {
             .actor_states
             .iter()
             .for_each(|(actor_id, _actor_state)| {
-                println!("{:?}", self.actor_state_string(actor_id))
-            })
+                log::debug!(
+                    "{}: {:?}",
+                    self.object_id_to_name
+                        .get(&_actor_state.object_id)
+                        .unwrap_or(&String::from("unknown")),
+                    self.actor_state_string(actor_id)
+                )
+            });
     }
 }
