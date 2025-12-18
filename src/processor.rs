@@ -280,6 +280,42 @@ impl<'a> ReplayProcessor<'a> {
         Ok(())
     }
 
+    /// Process multiple collectors simultaneously.
+    ///
+    /// All collectors receive the same frame data for each frame in the replay.
+    /// This is useful when you have multiple independent collectors that each
+    /// gather different aspects of replay data.
+    ///
+    /// Note: This method assumes all collectors return [`TimeAdvance::NextFrame`].
+    /// If collectors return different [`TimeAdvance`] values, the behavior may
+    /// not be as expected.
+    pub fn process_all(&mut self, collectors: &mut [&mut dyn Collector]) -> SubtrActorResult<()> {
+        for (index, frame) in self
+            .replay
+            .network_frames
+            .as_ref()
+            .ok_or(SubtrActorError::new(
+                SubtrActorErrorVariant::NoNetworkFrames,
+            ))?
+            .frames
+            .iter()
+            .enumerate()
+        {
+            // Update the internal state of the processor based on the current frame
+            self.actor_state.process_frame(frame, index)?;
+            self.update_mappings(frame)?;
+            self.update_ball_id(frame)?;
+            self.update_boost_amounts(frame, index)?;
+            self.update_demolishes(frame, index)?;
+
+            // Call process_frame on each collector
+            for collector in collectors.iter_mut() {
+                collector.process_frame(self, frame, index, frame.time)?;
+            }
+        }
+        Ok(())
+    }
+
     /// Reset the state of the [`ReplayProcessor`].
     pub fn reset(&mut self) {
         self.player_to_car = HashMap::new();
@@ -1182,6 +1218,20 @@ impl<'a> ReplayProcessor<'a> {
 
     pub fn player_count(&self) -> usize {
         self.iter_player_ids_in_order().count()
+    }
+
+    /// Returns a map of all player IDs to their names.
+    ///
+    /// This iterates over all known players and retrieves their names.
+    /// Players whose names cannot be retrieved are skipped.
+    pub fn get_player_names(&self) -> HashMap<PlayerId, String> {
+        self.iter_player_ids_in_order()
+            .filter_map(|player_id| {
+                self.get_player_name(player_id)
+                    .ok()
+                    .map(|name| (player_id.clone(), name))
+            })
+            .collect()
     }
 
     fn iter_actors_by_type_err(
